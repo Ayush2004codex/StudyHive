@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="card animate__animated animate__fadeInUp">
+        <h1>Dashboard</h1>
+        <!-- Add the image here -->
+        <img src="{{ url_for('static', filename='studyhive.jpg') }}" alt="StudyHive" style="width: 100%; max-width: 500px; border-radius: 15px; margin: 20px 0;">
+        <h2>Your Groups</h2>
+        <ul>
+            {% for group in created_groups %}
+                <li><a href="{{ url_for('group', unique_id=group.unique_id) }}" class="button">{{ group.name }}</a></li>
+            {% endfor %}
+            {% for group in joined_groups %}
+                <li><a href="{{ url_for('group', unique_id=group.unique_id) }}" class="button">{{ group.name }} (Joined)</a></li>
+            {% endfor %}
+        </ul>
+        <h2>Create a Group</h2>
+        <form method="POST" action="{{ url_for('create_group') }}">
+            <label for="name">Group Name:</label>
+            <input type="text" id="name" name="name" required>
+            <br>
+            <label for="unique_id">Group ID:</label>
+            <input type="text" id="unique_id" name="unique_id" required>
+            <br>
+            <button type="submit" class="button">Create Group</button>
+        </form>
+        <h2>Join a Group</h2>
+        <form method="POST" action="{{ url_for('join_group') }}">
+            <label for="unique_id">Group ID:</label>
+            <input type="text" id="unique_id" name="unique_id" required>
+            <br>
+            <button type="submit" class="button">Join Group</button>
+        </form>
+        <a href="{{ url_for('logout') }}" class="button">Logout</a>
+    </div>
+</body>
+</html>

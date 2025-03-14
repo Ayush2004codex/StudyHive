@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ group.name }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+</head>
+<body>
+    <div class="card animate__animated animate__fadeInUp">
+        <h1>{{ group.name }}</h1>
+        <p>Group ID: {{ group.unique_id }}</p>
+
+        <!-- Members Section -->
+        <h2>Members</h2>
+        <ul id="members-list">
+            {% for member in group.members %}
+                <li>{{ member.username }}</li>
+            {% endfor %}
+        </ul>
+
+        <!-- Notes Section -->
+        <h2>Notes</h2>
+        <ul id="notes-list">
+            {% for note in group.notes %}
+                <li>
+                    {% if note.content %}
+                        <p>{{ note.content }}</p>
+                    {% endif %}
+                    {% if note.filename %}
+                        <a href="{{ url_for('uploaded_file', filename=note.filename) }}" class="button">Download File</a>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+
+        <!-- Add a Note Section -->
+        <h2>Add a Note</h2>
+        <form id="note-form" method="POST" enctype="multipart/form-data">
+            <label for="content">Note Content:</label>
+            <textarea id="content" name="content" oninput="showPreview(this.value)"></textarea>
+            <div id="note-preview" class="preview"></div>
+            <br>
+            <label for="file">Upload File (PDF, DOC, TXT):</label>
+            <input type="file" id="file" name="file">
+            <div id="progress-bar" class="progress-bar">
+                <div id="progress" class="progress"></div>
+            </div>
+            <br>
+            <button type="submit" class="button">Add Note</button>
+        </form>
+
+        <!-- Group Chat Section -->
+        <h2>Group Chat</h2>
+        <div id="chat">
+            <ul id="messages"></ul>
+            <input id="message" autocomplete="off">
+            <button onclick="sendMessage()" class="button">Send</button>
+        </div>
+
+        <!-- Back to Dashboard -->
+        <a href="{{ url_for('dashboard') }}" class="button">Back to Dashboard</a>
+    </div>
+
+    <script>
+        // Socket.IO for Real-Time Chat
+        const socket = io();
+
+        // Join the group's room
+        socket.emit('join', { room: "{{ group.unique_id }}" });
+
+        // Receive messages
+        socket.on('message', function(data) {
+            const li = document.createElement('li');
+            li.textContent = data;
+            document.getElementById('messages').appendChild(li);
+        });
+
+        // Send messages
+        function sendMessage() {
+            const message = document.getElementById('message').value;
+            socket.emit('message', { room: "{{ group.unique_id }}", message: message });
+            document.getElementById('message').value = '';
+        }
+
+        // Note Preview
+        function showPreview(content) {
+            const preview = document.getElementById('note-preview');
+            preview.textContent = content;
+        }
+
+        // File Upload Progress Bar
+        document.getElementById('file').addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const progressBar = document.getElementById('progress');
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const xhr = new XMLHttpRequest();
+                xhr.upload.addEventListener('progress', function(event) {
+                    if (event.lengthComputable) {
+                        const percent = (event.loaded / event.total) * 100;
+                        progressBar.style.width = percent + '%';
+                    }
+                });
+
+                xhr.open('POST', '/upload', true);
+                xhr.send(formData);
+            }
+        });
+    </script>
+</body>
+</html>
